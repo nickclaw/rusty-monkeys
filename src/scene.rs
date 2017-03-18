@@ -1,10 +1,15 @@
+extern crate image;
+
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Error;
 use std::io::prelude::*;
 
+use self::image::{ImageBuffer, Rgb};
+
 use triangle::Triangle;
 use point::Point;
+use camera::OrthoCamera;
 
 #[derive(Debug)]
 pub struct Scene {
@@ -30,6 +35,27 @@ impl Scene {
         }
 
         Ok(Scene { faces: faces })
+    }
+
+    pub fn render(&self, camera: OrthoCamera) -> Result<bool, Error> {
+        let path = "/Users/nickclaw/workspace/rust/raytracer/out.png";
+        let ref faces = self.faces;
+        let imgx = 250;
+        let imgy = 250;
+        let mut image = image::ImageBuffer::new(imgx, imgy);
+        let rays = camera.rays(imgx, imgy, 0.02);
+
+        for (x, y, pixel) in image.enumerate_pixels_mut() {
+            let ref ray = rays[(x * imgx + y) as usize];
+            let intersects = faces.into_iter().any(|face| face.intersects(ray));
+            let val: u8 = if intersects { 255 } else { 0 };
+
+            *pixel = image::Luma([val]);
+        }
+
+        // write it out to a file
+        image.save(path).unwrap();
+        Ok(true)
     }
 }
 

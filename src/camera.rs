@@ -17,7 +17,7 @@ impl OrthoCamera {
         }
     }
 
-    pub fn rays(&self, w: usize, h: usize, z: f64) -> Vec<Ray> {
+    pub fn rays(&self, w: u32, h: u32, z: f64) -> Vec<Ray> {
         let mut rays: Vec<Ray> = vec![];
         let offset_u = (w as f64 - 1.0) / 2.0;
         let offset_v = (h as f64 - 1.0) / 2.0;

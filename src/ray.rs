@@ -3,8 +3,8 @@ use vector::Vector;
 
 #[derive(Debug, PartialEq)]
 pub struct Ray {
-    loc: Point,
-    dir: Vector,
+    pub loc: Point,
+    pub dir: Vector,
 }
 
 impl Ray {

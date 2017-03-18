@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use point::Point;
 use vector::Vector;
+use ray::Ray;
 
 #[derive(Debug, PartialEq)]
 pub struct Triangle {
@@ -35,6 +36,32 @@ impl Triangle {
         let v2 = verts[usize::from_str(entries.next().unwrap()).unwrap() - 1].clone();
 
         Triangle::new(v0, v1, v2)
+    }
+
+    pub fn intersects(&self, ray: &Ray) -> bool {
+        let u = self.v1.vector_to(&self.v0);
+        let v = self.v2.vector_to(&self.v0);
+        let p = ray.dir.cross(&v);
+        let d = u.dot(&p);
+        if d > -0.0001 && d < 0.0001 {
+            return false;
+        }
+
+        let id = 1.0 / d;
+        let t = ray.loc.vector_to(&self.v0);
+        let uu = t.dot(&p) * id;
+        if uu < 0.0 || uu > 1.0  {
+            return false;
+        }
+
+
+        let q = t.cross(&u);
+        let vv = ray.dir.dot(&q) * id;
+        if vv < 0.0 || uu + vv > 1.0 {
+            return false;
+        }
+
+        true
     }
 }
 
