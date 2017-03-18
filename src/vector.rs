@@ -2,9 +2,9 @@ use std::ops::{Add,Sub,Mul,Div};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Vector {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 impl Vector {

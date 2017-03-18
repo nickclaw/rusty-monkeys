@@ -5,10 +5,10 @@ use vector::Vector;
 
 #[derive(Debug, PartialEq)]
 pub struct Triangle {
-    v0: Point,
-    v1: Point,
-    v2: Point,
-    n: Vector,
+    pub v0: Point,
+    pub v1: Point,
+    pub v2: Point,
+    pub n: Vector,
 }
 
 impl Triangle {
