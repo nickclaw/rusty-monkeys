@@ -1,0 +1,91 @@
+use std::ops::{Sub,Add};
+use vector::Vector;
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Point {
+    x: f64,
+    y: f64,
+    z: f64,
+}
+
+impl Point {
+
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Point {
+            x: x,
+            y: y,
+            z: z,
+        }
+    }
+
+    pub fn distance_to(&self, p: &Point) -> f64 {
+        let diff = self.clone() - p.clone();
+        let sum = diff.x.powi(2) + diff.y.powi(2) + diff.z.powi(2);
+        sum.sqrt()
+    }
+
+    pub fn vector_to(&self, p: &Point) -> Vector {
+        let diff = self.clone() - p.clone();
+        Vector::new(
+            diff.x,
+            diff.y,
+            diff.z,
+        )
+    }
+}
+
+impl Add for Point {
+    type Output = Point;
+
+    fn add(self, p: Point) -> Point {
+        Point {
+            x: self.x + p.x,
+            y: self.y + p.y,
+            z: self.z + p.z,
+        }
+    }
+}
+
+impl Sub for Point {
+    type Output = Point;
+
+    fn sub(self, p: Point) -> Point {
+        Point {
+            x: self.x - p.x,
+            y: self.y - p.y,
+            z: self.z - p.z,
+        }
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use point::Point;
+
+    #[test]
+    fn test_distance() {
+        // basic 3,4,5 triangle
+        let a = Point::new(0.0, 3.0, 0.0);
+        let b = Point::new(4.0, 0.0, 0.0);
+        assert!(a.distance_to(&b) == 5.0);
+    }
+
+    #[test]
+    fn test_add() {
+        assert!(Point::new(1.0,2.0,3.0) + Point::new(1.0,2.0,3.0) == Point::new(2.0,4.0,6.0));
+        assert!(Point::new(0.0,0.0,0.0) + Point::new(-1.0,-1.0,-1.0) == Point::new(-1.0, -1.0, -1.0));
+    }
+
+    #[test]
+    fn test_sub() {
+        assert!(Point::new(1.0,2.0,3.0) - Point::new(1.0,2.0,3.0) == Point::new(0.0,0.0,0.0));
+        assert!(Point::new(0.0,0.0,0.0) - Point::new(-1.0,-1.0,-1.0) == Point::new(1.0, 1.0, 1.0));
+    }
+
+    #[test]
+    fn test_eq() {
+        assert!(Point::new(1.0,2.0,3.0) == Point::new(1.0,2.0,3.0));
+        assert!(Point::new(1.0,2.0,3.0) != Point::new(3.0,2.0,1.0));
+    }
+}
