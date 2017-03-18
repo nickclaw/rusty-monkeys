@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use point::Point;
 use vector::Vector;
 
@@ -22,6 +24,17 @@ impl Triangle {
             v2: v2,
             n: n,
         }
+    }
+
+    pub fn from_str(line: &str, verts: &Vec<Point>) -> Triangle {
+        let mut entries = line.split_whitespace();
+        entries.next();
+
+        let v0 = verts[usize::from_str(entries.next().unwrap()).unwrap() - 1].clone();
+        let v1 = verts[usize::from_str(entries.next().unwrap()).unwrap() - 1].clone();
+        let v2 = verts[usize::from_str(entries.next().unwrap()).unwrap() - 1].clone();
+
+        Triangle::new(v0, v1, v2)
     }
 }
 

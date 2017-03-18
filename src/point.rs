@@ -1,5 +1,7 @@
 use std::ops::{Sub,Add};
 use vector::Vector;
+use std::str::FromStr;
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Point {
@@ -16,6 +18,17 @@ impl Point {
             y: y,
             z: z,
         }
+    }
+
+    pub fn from_str(line: &str) -> Point {
+        let mut entries = line.split_whitespace();
+        entries.next();
+
+        let x = f64::from_str(entries.next().unwrap()).unwrap();
+        let y = f64::from_str(entries.next().unwrap()).unwrap();
+        let z = f64::from_str(entries.next().unwrap()).unwrap();
+
+        Point::new(x, y, z)
     }
 
     pub fn distance_to(&self, p: &Point) -> f64 {
