@@ -6,7 +6,7 @@ use std::io::BufReader;
 use std::io::Error;
 use std::io::prelude::*;
 use std::thread;
-use std::sync::mpsc;
+use std::thread::JoinHandle;
 use std::sync::Arc;
 use std::collections::HashMap;
 
@@ -55,57 +55,60 @@ impl Scene{
         let mut image = image::ImageBuffer::new(IMGX, IMGY);
         let rays = Arc::new(camera.rays(IMGX, IMGY, 0.01));
         let tree = Arc::new(self.tree);
-        let (tx, rx) = mpsc::channel();
 
         let chunks = num_cpus::get() as u32 * 4;
         let chunk_size = (IMGX + chunks - 1) / chunks;
 
-        for step in 0..chunks {
-            let tx = tx.clone();
-            let tree = tree.clone();
-            let rays = rays.clone();
+        let results: Result<Vec<Vec<(u32, u32, u8)>>, _> = (0..chunks)
+            .map(|step| {
+                let tree = tree.clone();
+                let rays = rays.clone();
 
-            thread::spawn(move || {
-                let mut vals: Vec<(u32, u32, u8)> = vec![];
+                thread::spawn(move || {
+                    let mut vals: Vec<(u32, u32, u8)> = vec![];
 
-                for x in 0..chunk_size {
-                    let x = x + step * chunk_size;
+                    for x in 0..chunk_size {
+                        let x = x + step * chunk_size;
 
-                    if x == IMGX {
-                        break;
+                        if x == IMGX {
+                            break;
+                        }
+
+                        for y in 0..IMGY {
+                            let ray = rays[(x * IMGX + y) as usize];
+                            let closest = tree.get_faces(ray).iter().fold(None, |min: Option<f64>, face| {
+                                let dist: Option<f64> = face.intersects(ray);
+
+                                match (min, dist) {
+                                   (Some(a), Some(b)) => Some(a.max(b)),
+                                   (_, Some(x)) => Some(x),
+                                   (_, _) => min,
+                               }
+                           });
+
+                           let v = match closest {
+                               Some(x) => {
+                                   255 - (255.0 / (x - 12.5)) as u8
+                               },
+                               None => {
+                                  0u8
+                               },
+                           };
+
+                           vals.push((x, y, v))
+                        }
                     }
 
-                    for y in 0..IMGY {
-                        let ray = rays[(x * IMGX + y) as usize];
-                        let closest = tree.get_faces(ray).iter().fold(None, |min: Option<f64>, face| {
-                            let dist: Option<f64> = face.intersects(ray);
+                    vals
+                })
+            })
+            .collect::<Vec<JoinHandle<Vec<_>>>>()
+            .into_iter()
+            .map(|handle| handle.join())
+            .collect();
 
-                            match (min, dist) {
-                               (Some(a), Some(b)) => Some(a.max(b)),
-                               (_, Some(x)) => Some(x),
-                               (_, _) => min,
-                           }
-                       });
-
-                       let v = match closest {
-                           Some(x) => {
-                               255 - (255.0 / (x - 12.5)) as u8
-                           },
-                           None => {
-                              0u8
-                           },
-                       };
-
-                       vals.push((x, y, v))
-                    }
-                }
-
-                tx.send(vals).unwrap();
-            });
-        }
-
-        for i in 0..chunks {
-            for (x, y, val) in rx.recv().unwrap().into_iter() {
+        for result in results.unwrap().into_iter() {
+            for (x, y, val) in result.into_iter() {
                 let pixel = image.get_pixel_mut(x, y);
                 *pixel = image::Luma([val]);
             };
