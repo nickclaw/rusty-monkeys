@@ -78,11 +78,9 @@ impl Scene{
 
                    match closest {
                        Some(x) => {
-                        //    println!"{}", x);
-                           vals.push(255 - (255.0 / x) as u8);
+                           vals.push(255 - (255.0 / (x - 12.0)) as u8);
                        },
                        None => {
-                        //    println!("none");
                            vals.push(0);
                        },
                    }
@@ -100,7 +98,6 @@ impl Scene{
 
         for (x, y, pixel) in image.enumerate_pixels_mut() {
             let val = all.get(&x).unwrap()[y as usize];
-
 
             *pixel = image::Luma([val]);
         }
