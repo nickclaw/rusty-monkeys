@@ -14,6 +14,8 @@ use self::image::{ImageBuffer, Rgb};
 use triangle::Triangle;
 use point::Point;
 use camera::OrthoCamera;
+use octree::Octree;
+use bounds::Bounds;
 
 const PATH:&'static str = "/Users/nickclaw/workspace/rust/raytracer/out.png";
 const IMGX: u32 = 250;
@@ -21,58 +23,70 @@ const IMGY: u32 = 250;
 
 #[derive(Debug)]
 pub struct Scene {
-    faces: Vec<Triangle>,
+    tree: Octree,
 }
 
-impl Scene {
+impl Scene{
 
     pub fn from_file(path: &str) -> Result<Scene, Error> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
 
         let mut verts: Vec<Point> = vec![];
-        let mut faces: Vec<Triangle> = vec![];
+        let mut tree = Octree::new(
+            Bounds::new(-3.0, 3.0, -3.0, 3.0, -3.0, 3.0),
+            3
+        );
 
         for line in reader.lines().map(|l| l.unwrap()) {
             match line.chars().next().unwrap() {
                 'o' => verts = vec![],
                 'v' => verts.push(Point::from_str(&line)),
-                'f' => faces.push(Triangle::from_str(&line, &verts)),
+                'f' => tree.insert(Triangle::from_str(&line, &verts)),
                 _ => continue, // choosing not to parse other types
             }
         }
 
-        Ok(Scene { faces: faces })
+        Ok(Scene { tree: tree })
     }
 
     pub fn render(self, camera: OrthoCamera) -> Result<bool, Error> {
         let mut image = image::ImageBuffer::new(IMGX, IMGY);
         let rays = Arc::new(camera.rays(IMGX, IMGY, 0.01));
-        let faces = Arc::new(self.faces);
+        let tree = Arc::new(self.tree);
         let (tx, rx) = mpsc::channel();
 
         for x in 0..IMGX {
             let tx = tx.clone();
-            let faces = faces.clone();
+            let tree = tree.clone();
             let rays = rays.clone();
 
             thread::spawn(move || {
-                let vals = (0..IMGY)
-                    .map(|y| rays[(x * IMGX + y) as usize].clone())
-                    .map(|ray| faces.iter().fold(None, |min: Option<f64>, face| {
-                        let dist: Option<f64> = face.intersects(&ray);
+                let mut vals: Vec<u8> = vec![];
+
+                for y in 0..IMGY {
+                    let ray = rays[(x * IMGX + y) as usize];
+                    let closest = tree.get_faces(ray).iter().fold(None, |min: Option<f64>, face| {
+                        let dist: Option<f64> = face.intersects(ray);
 
                         match (min, dist) {
                            (Some(a), Some(b)) => Some(a.max(b)),
                            (_, Some(x)) => Some(x),
                            (_, _) => min,
                        }
-                    }))
-                    .map(|b| match b {
-                        Some(x) => 255 - (255.0 / x) as u8,
-                        None => 0,
-                    })
-                    .collect::<Vec<u8>>();
+                   });
+
+                   match closest {
+                       Some(x) => {
+                        //    println!"{}", x);
+                           vals.push(255 - (255.0 / x) as u8);
+                       },
+                       None => {
+                        //    println!("none");
+                           vals.push(0);
+                       },
+                   }
+                }
 
                 tx.send((x, vals)).unwrap();
             });

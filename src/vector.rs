@@ -26,6 +26,14 @@ impl Vector {
         self / mag
     }
 
+    pub fn invert(self) -> Vector {
+        Vector::new(
+            1.0 / self.x,
+            1.0 / self.y,
+            1.0 / self.z
+        )
+    }
+
     pub fn cross(self, v: Vector) -> Vector {
         Vector {
             x: self.y * v.z - self.z * v.y,

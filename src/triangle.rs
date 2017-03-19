@@ -52,7 +52,7 @@ impl Triangle {
         Triangle::new(v0, v1, v2)
     }
 
-    pub fn intersects(&self, ray: &Ray) -> Option<f64> {
+    pub fn intersects(&self, ray: Ray) -> Option<f64> {
         let ev1 = self.v1.vector_to(self.v0);
         let ev2 = self.v2.vector_to(self.v0);
         let pvec = ray.dir.cross(ev2);
@@ -82,8 +82,8 @@ impl Triangle {
         Some(t)
     }
 
-    pub fn bounds(&self) -> Bounds {
-        self.bounds.clone()
+    pub fn bounds(self) -> Bounds {
+        self.bounds
     }
 }
 

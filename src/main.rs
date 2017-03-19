@@ -7,7 +7,9 @@ use vector::Vector;
 
 mod point;
 mod vector;
+mod bounds;
 mod triangle;
+mod octree;
 mod ray;
 mod camera;
 mod scene;

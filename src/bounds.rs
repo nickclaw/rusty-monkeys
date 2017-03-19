@@ -30,23 +30,57 @@ impl Bounds {
         }
     }
 
-    pub fn width(&self) -> f64 {
+    pub fn width(self) -> f64 {
         self.xmax - self.xmin
     }
 
-    pub fn depth(&self) -> f64 {
+    pub fn depth(self) -> f64 {
         self.ymax - self.ymin
     }
 
-    pub fn height(&self) -> f64 {
+    pub fn height(self) -> f64 {
         self.zmax - self.zmin
     }
 
-    pub fn overlaps(&self, other: &Bounds) -> bool {
+    pub fn overlaps(self, other: Bounds) -> bool {
+        if self.xmax < other.xmin { return false; }
+        if self.xmin > other.xmax { return false; }
+        if self.ymax < other.ymin { return false; }
+        if self.ymin > other.ymax { return false; }
+        if self.zmax < other.zmin { return false; }
+        if self.zmin > other.zmax { return false; }
         true
     }
 
-    pub fn intersects(&self, ray: &Ray) -> bool {
+    pub fn intersects(self, r: Ray) -> bool {
+        let _txmin = (self.xmin - r.loc.x) / r.dir.x;
+        let _txmax = (self.xmax - r.loc.x) / r.dir.x;
+        let (mut txmin, mut txmax) = if _txmin > _txmax { (_txmax, _txmin) } else { (_txmin, _txmax) };
+
+        let _tymin = (self.ymin - r.loc.y) / r.dir.y;
+        let _tymax = (self.ymax - r.loc.y) / r.dir.y;
+        let (mut tymin, mut tymax) = if _tymin > _tymax { (_tymax, _tymin) } else { (_tymin, _tymax) };
+
+        if (txmin > tymax) || (tymin > txmax) {
+            return false;
+        }
+
+        if tymin > txmin {
+            txmin = tymin;
+        }
+
+        if tymax < txmax {
+            txmax = tymax;
+        }
+
+        let _tzmin = (self.zmin - r.loc.z) / r.dir.z;
+        let _tzmax = (self.zmax - r.loc.z) / r.dir.z;
+        let (mut tzmin, mut tzmax) = if _tzmin > _tzmax { (_tzmax, _tzmin) } else { (_tzmin, _tzmax) };
+
+        if (txmin > tzmax) || (tzmin > txmax) {
+            return false;
+        }
+
         true
     }
 }
