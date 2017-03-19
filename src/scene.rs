@@ -1,13 +1,9 @@
 extern crate image;
 
-use std::thread;
-use std::sync::mpsc;
-use std::sync::Arc;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Error;
 use std::io::prelude::*;
-use std::collections::HashMap;
 
 use self::image::{ImageBuffer, Rgb};
 
@@ -41,40 +37,19 @@ impl Scene {
         Ok(Scene { faces: faces })
     }
 
-    pub fn render(self, camera: OrthoCamera) -> Result<bool, Error> {
+    pub fn render(&self, camera: OrthoCamera) -> Result<bool, Error> {
         let path = "/Users/nickclaw/workspace/rust/raytracer/out.png";
-        let imgx = 500;
-        let imgy = 500;
+        let ref faces = self.faces;
+        let imgx = 250;
+        let imgy = 250;
         let mut image = image::ImageBuffer::new(imgx, imgy);
-        let rays = Arc::new(camera.rays(imgx, imgy, 0.1));
-        let faces = Arc::new(self.faces);
-
-        let (tx, rx) = mpsc::channel();
-
-        for x in 0..imgx {
-            let tx = tx.clone();
-            let faces = faces.clone();
-            let rays = rays.clone();
-
-            thread::spawn(move || {
-                let vals = (0..imgy)
-                    .map(|y| rays[(x * imgx + y) as usize].clone())
-                    .map(|ray| faces.iter().any(|face| face.intersects(&ray)))
-                    .map(|b| if b { 255 } else { 0 })
-                    .collect::<Vec<u8>>();
-
-                tx.send((x, vals)).unwrap();
-            });
-        }
-
-        let mut all: HashMap<u32, Vec<u8>> = HashMap::new();
-        for i in 0..imgx {
-            let (i, row) = rx.recv().unwrap();
-            all.insert(i, row);
-        }
+        let rays = camera.rays(imgx, imgy, 0.02);
 
         for (x, y, pixel) in image.enumerate_pixels_mut() {
-            let val = all.get(&x).unwrap()[y as usize];
+            let ref ray = rays[(x * imgx + y) as usize];
+            let intersects = faces.into_iter().any(|face| face.intersects(ray));
+            let val: u8 = if intersects { 255 } else { 0 };
+
             *pixel = image::Luma([val]);
         }
 
