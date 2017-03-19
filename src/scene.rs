@@ -1,4 +1,5 @@
 extern crate image;
+extern crate num_cpus;
 
 use std::fs::File;
 use std::io::BufReader;
@@ -56,50 +57,58 @@ impl Scene{
         let tree = Arc::new(self.tree);
         let (tx, rx) = mpsc::channel();
 
-        for x in 0..IMGX {
+        let chunks = num_cpus::get() as u32 * 4;
+        let chunk_size = (IMGX + chunks - 1) / chunks;
+
+        for step in 0..chunks {
             let tx = tx.clone();
             let tree = tree.clone();
             let rays = rays.clone();
 
             thread::spawn(move || {
-                let mut vals: Vec<u8> = vec![];
+                let mut vals: Vec<(u32, u32, u8)> = vec![];
 
-                for y in 0..IMGY {
-                    let ray = rays[(x * IMGX + y) as usize];
-                    let closest = tree.get_faces(ray).iter().fold(None, |min: Option<f64>, face| {
-                        let dist: Option<f64> = face.intersects(ray);
+                for x in 0..chunk_size {
+                    let x = x + step * chunk_size;
 
-                        match (min, dist) {
-                           (Some(a), Some(b)) => Some(a.max(b)),
-                           (_, Some(x)) => Some(x),
-                           (_, _) => min,
-                       }
-                   });
+                    if x == IMGX {
+                        break;
+                    }
 
-                   match closest {
-                       Some(x) => {
-                           vals.push(255 - (255.0 / (x - 12.5)) as u8);
-                       },
-                       None => {
-                           vals.push(0);
-                       },
-                   }
+                    for y in 0..IMGY {
+                        let ray = rays[(x * IMGX + y) as usize];
+                        let closest = tree.get_faces(ray).iter().fold(None, |min: Option<f64>, face| {
+                            let dist: Option<f64> = face.intersects(ray);
+
+                            match (min, dist) {
+                               (Some(a), Some(b)) => Some(a.max(b)),
+                               (_, Some(x)) => Some(x),
+                               (_, _) => min,
+                           }
+                       });
+
+                       let v = match closest {
+                           Some(x) => {
+                               255 - (255.0 / (x - 12.5)) as u8
+                           },
+                           None => {
+                              0u8
+                           },
+                       };
+
+                       vals.push((x, y, v))
+                    }
                 }
 
-                tx.send((x, vals)).unwrap();
+                tx.send(vals).unwrap();
             });
         }
 
-        let mut all: HashMap<u32, Vec<u8>> = HashMap::new();
-        for i in 0..IMGX {
-            let (i, row) = rx.recv().unwrap();
-            all.insert(i, row);
-        }
-
-        for (x, y, pixel) in image.enumerate_pixels_mut() {
-            let val = all.get(&x).unwrap()[y as usize];
-
-            *pixel = image::Luma([val]);
+        for i in 0..chunks {
+            for (x, y, val) in rx.recv().unwrap().into_iter() {
+                let pixel = image.get_pixel_mut(x, y);
+                *pixel = image::Luma([val]);
+            };
         }
 
         // write it out to a file
