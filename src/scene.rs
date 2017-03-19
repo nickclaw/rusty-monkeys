@@ -34,8 +34,8 @@ impl Scene{
 
         let mut verts: Vec<Point> = vec![];
         let mut tree = Octree::new(
-            Bounds::new(-3.0, 3.0, -3.0, 3.0, -3.0, 3.0),
-            3
+            Bounds::new(-2.0, 2.0, -2.0, 2.0, -2.0, 2.0),
+            4
         );
 
         for line in reader.lines().map(|l| l.unwrap()) {
