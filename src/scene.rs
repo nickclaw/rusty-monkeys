@@ -78,7 +78,7 @@ impl Scene{
 
                    match closest {
                        Some(x) => {
-                           vals.push(255 - (255.0 / (x - 12.0)) as u8);
+                           vals.push(255 - (255.0 / (x - 12.5)) as u8);
                        },
                        None => {
                            vals.push(0);
