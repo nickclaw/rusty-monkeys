@@ -39,25 +39,27 @@ impl Triangle {
     }
 
     pub fn intersects(&self, ray: &Ray) -> bool {
-        let u = self.v1.vector_to(&self.v0);
-        let v = self.v2.vector_to(&self.v0);
-        let p = ray.dir.cross(&v);
-        let d = u.dot(&p);
-        if d > -0.0001 && d < 0.0001 {
+        let ev1 = self.v1.vector_to(&self.v0);
+        let ev2 = self.v2.vector_to(&self.v0);
+        let pvec = ray.dir.cross(&ev2);
+        let det = ev1.dot(&pvec);
+
+        if det > -0.0001 && det < 0.0001 {
             return false;
         }
 
-        let id = 1.0 / d;
-        let t = ray.loc.vector_to(&self.v0);
-        let uu = t.dot(&p) * id;
-        if uu < 0.0 || uu > 1.0  {
+        let invdet = 1.0 / det;
+        let tvec = ray.loc.vector_to(&self.v0);
+
+        let u = tvec.dot(&pvec) * invdet;
+        if u < 0.0 || u > 1.0  {
             return false;
         }
 
 
-        let q = t.cross(&u);
-        let vv = ray.dir.dot(&q) * id;
-        if vv < 0.0 || uu + vv > 1.0 {
+        let qvec = tvec.cross(&ev1);
+        let v = ray.dir.dot(&qvec) * invdet;
+        if v < 0.0 || u + v > 1.0 {
             return false;
         }
 

@@ -13,22 +13,25 @@ impl OrthoCamera {
     pub fn new(loc: Point, dir: Vector) -> OrthoCamera {
         OrthoCamera {
             loc: loc,
-            dir: dir,
+            dir: dir.to_unit(),
         }
     }
 
     pub fn rays(&self, w: u32, h: u32, z: f64) -> Vec<Ray> {
         let mut rays: Vec<Ray> = vec![];
+        let up = Vector::new(0.0,0.0,1.0);
+        let par = self.dir.clone().cross(&up);
+
         let offset_u = (w as f64 - 1.0) / 2.0;
         let offset_v = (h as f64 - 1.0) / 2.0;
 
         for u in 0..w {
             for v in 0..h {
                 rays.push(Ray::new(
-                    self.loc.clone() - Point::new(
-                        (u as f64 - offset_u) * z * self.dir.y,
-                        (u as f64 - offset_u) * z * self.dir.x,
-                        (v as f64 - offset_v) * z,
+                    self.loc.clone() + Point::new(
+                        /* x */ (u as f64 - offset_u) * z * par.x,
+                        /* y */ (u as f64 - offset_u) * z * par.y,
+                        /* z */ -(v as f64 - offset_v) * z,
                     ),
                     self.dir.clone(),
                 ));
@@ -54,6 +57,7 @@ mod test {
             Vector::new(-1.0, 0.0, 0.0),
         );
 
+        println!("{:?}", camera.rays(2, 2, 1.0));
         assert!(
             camera.rays(2, 2, 1.0) ==
             vec![
@@ -63,5 +67,21 @@ mod test {
                 Ray::new(Point::new(10.0,0.5,-0.5), Vector::new(-1.0, 0.0, 0.0)),
             ]
         );
+    }
+
+    #[test]
+    fn test_more_rays() {
+        let camera = OrthoCamera::new(
+            Point::new(5.0, 5.0, 0.0),
+            Vector::new(-1.0, -1.0, 0.0),
+        );
+
+        println!("{:?}", camera.rays(2, 2, 1.0));
+        assert!(
+            camera.rays(2, 2, 1.0) ==
+            vec![
+
+            ]
+        )
     }
 }
