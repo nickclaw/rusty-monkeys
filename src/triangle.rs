@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use geometry::{Bounded,Viewable};
 use point::Point;
 use vector::Vector;
 use ray::Ray;
@@ -11,9 +12,6 @@ pub struct Triangle {
     pub v1: Point,
     pub v2: Point,
     pub n: Vector,
-
-    // cached
-    bounds: Bounds,
 }
 
 impl Triangle {
@@ -22,22 +20,12 @@ impl Triangle {
         let e1 = v1.vector_to(v0);
         let e2 = v2.vector_to(v0);
         let n = e1.cross(e2).to_unit();
-        let bounds = Bounds::new(
-            v0.x.min(v1.x.min(v2.x)),
-            v0.x.max(v1.x.max(v2.x)),
-            v0.y.min(v1.y.min(v2.y)),
-            v0.y.max(v1.y.max(v2.y)),
-            v0.z.min(v1.z.min(v2.z)),
-            v0.z.max(v1.z.max(v2.z)),
-        );
 
         Triangle {
             v0: v0,
             v1: v1,
             v2: v2,
             n: n,
-
-            bounds: bounds,
         }
     }
 
@@ -51,15 +39,30 @@ impl Triangle {
 
         Triangle::new(v0, v1, v2)
     }
+}
 
-    pub fn intersects(&self, ray: Ray) -> Option<f64> {
+impl Bounded for Triangle {
+    fn bounds(&self) -> Bounds {
+        Bounds::new(
+            self.v0.x.min(self.v1.x.min(self.v2.x)),
+            self.v0.x.max(self.v1.x.max(self.v2.x)),
+            self.v0.y.min(self.v1.y.min(self.v2.y)),
+            self.v0.y.max(self.v1.y.max(self.v2.y)),
+            self.v0.z.min(self.v1.z.min(self.v2.z)),
+            self.v0.z.max(self.v1.z.max(self.v2.z)),
+        )
+    }
+}
+
+impl Viewable for Triangle {
+    fn intersects(&self, ray: Ray) -> bool {
         let ev1 = self.v1.vector_to(self.v0);
         let ev2 = self.v2.vector_to(self.v0);
         let pvec = ray.dir.cross(ev2);
         let det = ev1.dot(pvec);
 
         if det > -0.0001 && det < 0.0001 {
-            return None;
+            return false;
         }
 
         let invdet = 1.0 / det;
@@ -67,23 +70,20 @@ impl Triangle {
 
         let u = tvec.dot(pvec) * invdet;
         if u < 0.0 || u > 1.0  {
-            return None;
+            return false;
         }
 
 
         let qvec = tvec.cross(ev1);
         let v = ray.dir.dot(qvec) * invdet;
         if v < 0.0 || u + v > 1.0 {
-            return None;
+            return false;
         }
 
         let t = ev2.dot(qvec) * invdet;
 
-        Some(t)
-    }
-
-    pub fn bounds(self) -> Bounds {
-        self.bounds
+        // Some(t)
+        true
     }
 }
 

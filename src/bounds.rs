@@ -1,3 +1,6 @@
+use std::ops::Add;
+
+use geometry::{Bounded, Viewable};
 use ray::Ray;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -30,6 +33,10 @@ impl Bounds {
         }
     }
 
+    pub fn zero() -> Bounds {
+        Bounds::new(0.0,0.0,0.0,0.0,0.0,0.0)
+    }
+
     pub fn width(self) -> f64 {
         self.xmax - self.xmin
     }
@@ -51,8 +58,31 @@ impl Bounds {
         if self.zmin > other.zmax { return false; }
         true
     }
+}
 
-    pub fn intersects(self, r: Ray) -> bool {
+impl Add for Bounds {
+    type Output = Bounds;
+
+    fn add(self, p: Bounds) -> Bounds {
+        Bounds::new(
+            self.xmin.min(p.xmin),
+            self.xmax.min(p.xmax),
+            self.ymin.min(p.ymin),
+            self.ymax.min(p.ymax),
+            self.zmin.min(p.zmin),
+            self.zmax.min(p.zmax),
+        )
+    }
+}
+
+impl Bounded for Bounds {
+    fn bounds(&self) -> Bounds {
+        self.clone()
+    }
+}
+
+impl Viewable for Bounds {
+    fn intersects(&self, r: Ray) -> bool {
         let _txmin = (self.xmin - r.loc.x) / r.dir.x;
         let _txmax = (self.xmax - r.loc.x) / r.dir.x;
         let (mut txmin, mut txmax) = if _txmin > _txmax { (_txmax, _txmin) } else { (_txmin, _txmax) };

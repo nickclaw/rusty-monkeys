@@ -10,8 +10,7 @@ use std::thread::JoinHandle;
 use std::sync::Arc;
 use std::collections::HashMap;
 
-use self::image::{ImageBuffer, Rgb};
-
+use geometry::Viewable;
 use triangle::Triangle;
 use point::Point;
 use camera::OrthoCamera;
@@ -24,7 +23,7 @@ const IMGY: u32 = 250;
 
 #[derive(Debug)]
 pub struct Scene {
-    tree: Octree,
+    tree: Octree<Triangle>,
 }
 
 impl Scene{
@@ -35,8 +34,8 @@ impl Scene{
 
         let mut verts: Vec<Point> = vec![];
         let mut tree = Octree::new(
-            Bounds::new(-2.0, 2.0, -2.0, 2.0, -2.0, 2.0),
-            4
+            4,
+            Bounds::new(-2.0, 2.0, -2.0, 2.0, -2.0, 2.0)
         );
 
         for line in reader.lines().map(|l| l.unwrap()) {
@@ -76,24 +75,11 @@ impl Scene{
 
                         for y in 0..IMGY {
                             let ray = rays[(x * IMGX + y) as usize];
-                            let closest = tree.get_faces(ray).iter().fold(None, |min: Option<f64>, face| {
-                                let dist: Option<f64> = face.intersects(ray);
-
-                                match (min, dist) {
-                                   (Some(a), Some(b)) => Some(a.max(b)),
-                                   (_, Some(x)) => Some(x),
-                                   (_, _) => min,
-                               }
-                           });
-
-                           let v = match closest {
-                               Some(x) => {
-                                   255 - (255.0 / (x - 12.5)) as u8
-                               },
-                               None => {
-                                  0u8
-                               },
-                           };
+                            let hits = tree.get_faces(ray).iter().any(|face| face.intersects(ray));
+                            let v = match hits {
+                                true =>  255u8,
+                                false =>  0u8,
+                            };
 
                            vals.push((x, y, v))
                         }

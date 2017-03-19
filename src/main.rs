@@ -1,4 +1,3 @@
-use std::fs::File;
 
 use scene::Scene;
 use camera::OrthoCamera;
@@ -8,9 +7,10 @@ use vector::Vector;
 mod point;
 mod vector;
 mod bounds;
+mod geometry;
 mod triangle;
-mod octree;
 mod ray;
+mod octree;
 mod camera;
 mod scene;
 
