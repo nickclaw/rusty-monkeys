@@ -2,7 +2,7 @@ use point::Point;
 use vector::Vector;
 use ray::Ray;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct OrthoCamera {
     loc: Point,
     dir: Vector,
@@ -20,7 +20,7 @@ impl OrthoCamera {
     pub fn rays(&self, w: u32, h: u32, z: f64) -> Vec<Ray> {
         let mut rays: Vec<Ray> = vec![];
         let up = Vector::new(0.0,0.0,1.0);
-        let par = self.dir.clone().cross(&up);
+        let par = self.dir.cross(up);
 
         let offset_u = (w as f64 - 1.0) / 2.0;
         let offset_v = (h as f64 - 1.0) / 2.0;
@@ -28,12 +28,12 @@ impl OrthoCamera {
         for u in 0..w {
             for v in 0..h {
                 rays.push(Ray::new(
-                    self.loc.clone() + Point::new(
+                    self.loc + Point::new(
                         /* x */ (u as f64 - offset_u) * z * par.x,
                         /* y */ (u as f64 - offset_u) * z * par.y,
                         /* z */ -(v as f64 - offset_v) * z,
                     ),
-                    self.dir.clone(),
+                    self.dir,
                 ));
             }
         }

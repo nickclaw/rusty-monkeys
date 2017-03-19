@@ -1,7 +1,7 @@
 use point::Point;
 use vector::Vector;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Ray {
     pub loc: Point,
     pub dir: Vector,

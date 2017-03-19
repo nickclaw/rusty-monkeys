@@ -3,7 +3,7 @@ use vector::Vector;
 use std::str::FromStr;
 
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -31,14 +31,14 @@ impl Point {
         Point::new(x, y, z)
     }
 
-    pub fn distance_to(&self, p: &Point) -> f64 {
-        let diff = self.clone() - p.clone();
+    pub fn distance_to(self, p: Point) -> f64 {
+        let diff = self - p;
         let sum = diff.x.powi(2) + diff.y.powi(2) + diff.z.powi(2);
         sum.sqrt()
     }
 
-    pub fn vector_to(&self, p: &Point) -> Vector {
-        let diff = self.clone() - p.clone();
+    pub fn vector_to(self, p: Point) -> Vector {
+        let diff = self - p;
         Vector::new(
             diff.x,
             diff.y,
@@ -81,7 +81,7 @@ mod test {
         // basic 3,4,5 triangle
         let a = Point::new(0.0, 3.0, 0.0);
         let b = Point::new(4.0, 0.0, 0.0);
-        assert!(a.distance_to(&b) == 5.0);
+        assert!(a.distance_to(b) == 5.0);
     }
 
     #[test]

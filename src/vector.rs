@@ -1,6 +1,6 @@
 use std::ops::{Add,Sub,Mul,Div};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -16,17 +16,17 @@ impl Vector {
         }
     }
 
-    pub fn mag(&self) -> f64 {
+    pub fn mag(self) -> f64 {
         let sum = self.x.powi(2) + self.y.powi(2) + self.z.powi(2);
         sum.sqrt()
     }
 
-    pub fn to_unit(&self) -> Vector {
+    pub fn to_unit(self) -> Vector {
         let mag = self.mag();
-        self.clone() / mag
+        self / mag
     }
 
-    pub fn cross(&self, v: &Vector) -> Vector {
+    pub fn cross(self, v: Vector) -> Vector {
         Vector {
             x: self.y * v.z - self.z * v.y,
             y: self.z * v.x - self.x * v.z,
@@ -34,13 +34,13 @@ impl Vector {
         }
     }
 
-    pub fn dot(&self, v: &Vector) -> f64 {
+    pub fn dot(self, v: Vector) -> f64 {
         self.x * v.x
             + self.y * v.y
             + self.z * v.z
     }
 
-    pub fn is_orthogonal(&self, v: &Vector) -> bool {
+    pub fn is_orthogonal(self, v: Vector) -> bool {
         self.dot(v) == 0.0
     }
 }
@@ -116,14 +116,14 @@ mod test {
         let y = Vector::new(0.0, 1.0, 0.0);
         let z = Vector::new(0.0, 0.0, 1.0);
 
-        assert!(x.cross(&y) == z);
+        assert!(x.cross(y) == z);
     }
 
     #[test]
     fn test_dot() {
         let a = Vector::new(1.0, 2.0, 3.0);
         let b = Vector::new(4.0, 5.0, 6.0);
-        assert!(a.dot(&b) == 32.0);
+        assert!(a.dot(b) == 32.0);
     }
 
     #[test]
@@ -132,9 +132,9 @@ mod test {
         let y = Vector::new(0.0, 1.0, 0.0);
         let z = Vector::new(0.0, 0.0, 1.0);
 
-        assert!(x.is_orthogonal(&y));
-        assert!(x.is_orthogonal(&z));
-        assert!(y.is_orthogonal(&z));
+        assert!(x.is_orthogonal(y));
+        assert!(x.is_orthogonal(z));
+        assert!(y.is_orthogonal(z));
     }
 
     #[test]
