@@ -47,7 +47,7 @@ impl Scene {
 
     pub fn render(self, camera: OrthoCamera) -> Result<bool, Error> {
         let mut image = image::ImageBuffer::new(IMGX, IMGY);
-        let rays = Arc::new(camera.rays(IMGX, IMGY, 0.1));
+        let rays = Arc::new(camera.rays(IMGX, IMGY, 0.01));
         let faces = Arc::new(self.faces);
         let (tx, rx) = mpsc::channel();
 
@@ -59,8 +59,19 @@ impl Scene {
             thread::spawn(move || {
                 let vals = (0..IMGY)
                     .map(|y| rays[(x * IMGX + y) as usize].clone())
-                    .map(|ray| faces.iter().any(|face| face.intersects(&ray)))
-                    .map(|b| if b { 255 } else { 0 })
+                    .map(|ray| faces.iter().fold(None, |min: Option<f64>, face| {
+                        let dist: Option<f64> = face.intersects(&ray);
+
+                        match (min, dist) {
+                           (Some(a), Some(b)) => Some(a.max(b)),
+                           (_, Some(x)) => Some(x),
+                           (_, _) => min,
+                       }
+                    }))
+                    .map(|b| match b {
+                        Some(x) => 255 - (255.0 / x) as u8,
+                        None => 0,
+                    })
                     .collect::<Vec<u8>>();
 
                 tx.send((x, vals)).unwrap();

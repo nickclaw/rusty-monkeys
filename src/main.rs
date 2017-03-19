@@ -16,8 +16,8 @@ fn main() {
     let path = "/Users/nickclaw/workspace/rust/raytracer/data/monkey.obj";
     let scene = Scene::from_file(path).unwrap();
     let camera = OrthoCamera::new(
-        Point::new(10.0, 0.0, 0.0),
-        Vector::new(-1.0, 0.0, 0.0),
+        Point::new(10.0, 10.0, 0.0),
+        Vector::new(-1.0, -1.0, 0.0),
     );
 
     scene.render(camera).unwrap();
