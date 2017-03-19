@@ -4,12 +4,20 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::Error;
 use std::io::prelude::*;
+use std::thread;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::collections::HashMap;
 
 use self::image::{ImageBuffer, Rgb};
 
 use triangle::Triangle;
 use point::Point;
 use camera::OrthoCamera;
+
+const PATH:&'static str = "/Users/nickclaw/workspace/rust/raytracer/out.png";
+const IMGX: u32 = 250;
+const IMGY: u32 = 250;
 
 #[derive(Debug)]
 pub struct Scene {
@@ -37,24 +45,43 @@ impl Scene {
         Ok(Scene { faces: faces })
     }
 
-    pub fn render(&self, camera: OrthoCamera) -> Result<bool, Error> {
-        let path = "/Users/nickclaw/workspace/rust/raytracer/out.png";
-        let ref faces = self.faces;
-        let imgx = 250;
-        let imgy = 250;
-        let mut image = image::ImageBuffer::new(imgx, imgy);
-        let rays = camera.rays(imgx, imgy, 0.02);
+    pub fn render(self, camera: OrthoCamera) -> Result<bool, Error> {
+        let mut image = image::ImageBuffer::new(IMGX, IMGY);
+        let rays = Arc::new(camera.rays(IMGX, IMGY, 0.1));
+        let faces = Arc::new(self.faces);
+        let (tx, rx) = mpsc::channel();
+
+        for x in 0..IMGX {
+            let tx = tx.clone();
+            let faces = faces.clone();
+            let rays = rays.clone();
+
+            thread::spawn(move || {
+                let vals = (0..IMGY)
+                    .map(|y| rays[(x * IMGX + y) as usize].clone())
+                    .map(|ray| faces.iter().any(|face| face.intersects(&ray)))
+                    .map(|b| if b { 255 } else { 0 })
+                    .collect::<Vec<u8>>();
+
+                tx.send((x, vals)).unwrap();
+            });
+        }
+
+        let mut all: HashMap<u32, Vec<u8>> = HashMap::new();
+        for i in 0..IMGX {
+            let (i, row) = rx.recv().unwrap();
+            all.insert(i, row);
+        }
 
         for (x, y, pixel) in image.enumerate_pixels_mut() {
-            let ref ray = rays[(x * imgx + y) as usize];
-            let intersects = faces.into_iter().any(|face| face.intersects(ray));
-            let val: u8 = if intersects { 255 } else { 0 };
+            let val = all.get(&x).unwrap()[y as usize];
+
 
             *pixel = image::Luma([val]);
         }
 
         // write it out to a file
-        image.save(path).unwrap();
+        image.save(PATH).unwrap();
         Ok(true)
     }
 }
