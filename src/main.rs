@@ -7,9 +7,12 @@ use vector::Vector;
 
 mod point;
 mod vector;
+mod coord;
+mod bounds;
 mod triangle;
 mod ray;
 mod camera;
+mod facecache;
 mod scene;
 
 fn main() {

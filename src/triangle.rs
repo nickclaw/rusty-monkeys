@@ -1,10 +1,12 @@
 use std::str::FromStr;
+use std::cmp;
 
 use point::Point;
 use vector::Vector;
 use ray::Ray;
+use bounds::Bounds;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Triangle {
     pub v0: Point,
     pub v1: Point,
@@ -36,6 +38,17 @@ impl Triangle {
         let v2 = verts[usize::from_str(entries.next().unwrap()).unwrap() - 1].clone();
 
         Triangle::new(v0, v1, v2)
+    }
+
+    pub fn into_bounds(&self) -> Bounds {
+        Bounds::new(
+            self.v0.x.min(self.v1.x.min(self.v2.x)),
+            self.v0.x.max(self.v1.x.max(self.v2.x)),
+            self.v0.y.min(self.v1.y.min(self.v2.y)),
+            self.v0.y.max(self.v1.y.max(self.v2.y)),
+            self.v0.z.min(self.v1.z.min(self.v2.z)),
+            self.v0.z.max(self.v1.z.max(self.v2.z)),
+        )
     }
 
     pub fn intersects(&self, ray: &Ray) -> bool {
