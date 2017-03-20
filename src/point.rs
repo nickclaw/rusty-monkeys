@@ -20,6 +20,14 @@ impl Point {
         }
     }
 
+    pub fn zero() -> Self {
+        Point {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
+
     pub fn from_str(line: &str) -> Point {
         let mut entries = line.split_whitespace();
         entries.next();
@@ -43,6 +51,14 @@ impl Point {
             diff.x,
             diff.y,
             diff.z,
+        )
+    }
+
+    pub fn translate(self, v: Vector) -> Point {
+        Point::new(
+            self.x + v.x,
+            self.y + v.y,
+            self.z + v.z,
         )
     }
 }

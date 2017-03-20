@@ -71,10 +71,16 @@ impl Scene{
 
                         for y in 0..IMGY {
                             let ray = rays[(x * IMGX + y) as usize];
-                            let hits = tree.get_faces(ray).iter().any(|face| face.intersects(ray));
-                            let v = match hits {
-                                true =>  255u8,
-                                false =>  0u8,
+                            let min = tree.get_faces(ray).iter().fold(10000.0f64, |min, face| {
+                                match face.intersects(ray) {
+                                    None => min,
+                                    Some(int) => min.min(ray.loc.distance_to(int))
+                                }
+                            });
+
+                            let v = match min {
+                                10000.0 => 0u8,
+                                x => 255 - (255.0 / (x - 10.0)) as u8,
                             };
 
                            vals.push((x, y, v))

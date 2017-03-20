@@ -2,6 +2,7 @@ use std::ops::Add;
 
 use geometry::{Bounded, Viewable};
 use ray::Ray;
+use point::Point;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Bounds {
@@ -82,7 +83,7 @@ impl Bounded for Bounds {
 }
 
 impl Viewable for Bounds {
-    fn intersects(&self, r: Ray) -> bool {
+    fn intersects(&self, r: Ray) -> Option<Point> {
         let _txmin = (self.xmin - r.loc.x) / r.dir.x;
         let _txmax = (self.xmax - r.loc.x) / r.dir.x;
         let (mut txmin, mut txmax) = if _txmin > _txmax { (_txmax, _txmin) } else { (_txmin, _txmax) };
@@ -92,7 +93,7 @@ impl Viewable for Bounds {
         let (mut tymin, mut tymax) = if _tymin > _tymax { (_tymax, _tymin) } else { (_tymin, _tymax) };
 
         if (txmin > tymax) || (tymin > txmax) {
-            return false;
+            return None;
         }
 
         if tymin > txmin {
@@ -108,9 +109,9 @@ impl Viewable for Bounds {
         let (mut tzmin, mut tzmax) = if _tzmin > _tzmax { (_tzmax, _tzmin) } else { (_tzmin, _tzmax) };
 
         if (txmin > tzmax) || (tzmin > txmax) {
-            return false;
+            return None;
         }
 
-        true
+        Some(Point::zero())
     }
 }

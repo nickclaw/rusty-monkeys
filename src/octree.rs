@@ -48,7 +48,7 @@ impl<T> Octree<T> where T: Bounded + Viewable + Copy + Debug {
     }
 
     pub fn get_faces(&self, ray: Ray) -> Vec<T> {
-        let intersects = self.bounds.intersects(ray);
+        let intersects = self.bounds.intersects(ray).is_some();
         let mut all: Vec<T> = vec![];
 
         if self.depth == 0 && intersects {

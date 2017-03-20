@@ -55,14 +55,14 @@ impl Bounded for Triangle {
 }
 
 impl Viewable for Triangle {
-    fn intersects(&self, ray: Ray) -> bool {
+    fn intersects(&self, ray: Ray) -> Option<Point> {
         let ev1 = self.v1.vector_to(self.v0);
         let ev2 = self.v2.vector_to(self.v0);
         let pvec = ray.dir.cross(ev2);
         let det = ev1.dot(pvec);
 
         if det > -0.0001 && det < 0.0001 {
-            return false;
+            return None;
         }
 
         let invdet = 1.0 / det;
@@ -70,20 +70,19 @@ impl Viewable for Triangle {
 
         let u = tvec.dot(pvec) * invdet;
         if u < 0.0 || u > 1.0  {
-            return false;
+            return None;
         }
 
 
         let qvec = tvec.cross(ev1);
         let v = ray.dir.dot(qvec) * invdet;
         if v < 0.0 || u + v > 1.0 {
-            return false;
+            return None;
         }
 
         let t = ev2.dot(qvec) * invdet;
 
-        // Some(t)
-        true
+        Some(ray.loc.translate(ray.dir * t))
     }
 }
 
