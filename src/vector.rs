@@ -47,10 +47,6 @@ impl Vector {
             + self.y * v.y
             + self.z * v.z
     }
-
-    pub fn is_orthogonal(self, v: Vector) -> bool {
-        self.dot(v) == 0.0
-    }
 }
 
 impl Add for Vector  {
@@ -132,17 +128,6 @@ mod test {
         let a = Vector::new(1.0, 2.0, 3.0);
         let b = Vector::new(4.0, 5.0, 6.0);
         assert!(a.dot(b) == 32.0);
-    }
-
-    #[test]
-    fn test_ortho() {
-        let x = Vector::new(1.0, 0.0, 0.0);
-        let y = Vector::new(0.0, 1.0, 0.0);
-        let z = Vector::new(0.0, 0.0, 1.0);
-
-        assert!(x.is_orthogonal(y));
-        assert!(x.is_orthogonal(z));
-        assert!(y.is_orthogonal(z));
     }
 
     #[test]
