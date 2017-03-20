@@ -66,7 +66,7 @@ impl Scene{
                     for x in 0..chunk_size {
                         let x = x + step * chunk_size;
 
-                        if x == IMGX {
+                        if x >= IMGX {
                             break;
                         }
 
