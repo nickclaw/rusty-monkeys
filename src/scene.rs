@@ -37,7 +37,6 @@ impl Scene{
 
         for line in reader.lines().map(|l| l.unwrap()) {
             match line.chars().next().unwrap() {
-                'o' => verts = vec![],
                 'v' => verts.push(Point::from_str(&line)),
                 'f' => objects.push(Triangle::from_str(&line, &verts)),
                 _ => continue, // choosing not to parse other types
