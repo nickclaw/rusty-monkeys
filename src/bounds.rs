@@ -66,11 +66,11 @@ impl Add for Bounds {
     fn add(self, p: Bounds) -> Bounds {
         Bounds::new(
             self.xmin.min(p.xmin),
-            self.xmax.min(p.xmax),
+            self.xmax.max(p.xmax),
             self.ymin.min(p.ymin),
-            self.ymax.min(p.ymax),
+            self.ymax.max(p.ymax),
             self.zmin.min(p.zmin),
-            self.zmax.min(p.zmax),
+            self.zmax.max(p.zmax),
         )
     }
 }

@@ -33,21 +33,18 @@ impl Scene{
         let reader = BufReader::new(file);
 
         let mut verts: Vec<Point> = vec![];
-        let mut tree = Octree::new(
-            4,
-            Bounds::new(-2.0, 2.0, -2.0, 2.0, -2.0, 2.0)
-        );
+        let mut objects: Vec<Triangle> = vec![];
 
         for line in reader.lines().map(|l| l.unwrap()) {
             match line.chars().next().unwrap() {
                 'o' => verts = vec![],
                 'v' => verts.push(Point::from_str(&line)),
-                'f' => tree.insert(Triangle::from_str(&line, &verts)),
+                'f' => objects.push(Triangle::from_str(&line, &verts)),
                 _ => continue, // choosing not to parse other types
             }
         }
 
-        Ok(Scene { tree: tree })
+        Ok(Scene { tree: objects.into_iter().collect() })
     }
 
     pub fn render(self, camera: OrthoCamera) -> Result<bool, Error> {

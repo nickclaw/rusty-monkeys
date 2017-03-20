@@ -1,18 +1,19 @@
 use std::iter::FromIterator;
+use std::fmt::Debug;
 
 use geometry::{Bounded, Viewable};
 use bounds::Bounds;
 use ray::Ray;
 
 #[derive(Debug)]
-pub struct Octree<T> where T: Bounded + Viewable + Copy {
+pub struct Octree<T> where T: Bounded + Viewable + Copy + Debug {
     depth: u8,
     bounds: Bounds,
     faces: Vec<T>,
     trees: Vec<Octree<T>>,
 }
 
-impl<T> Octree<T> where T: Bounded + Viewable + Copy {
+impl<T> Octree<T> where T: Bounded + Viewable + Copy + Debug {
 
     pub fn new(depth: u8, bounds: Bounds) -> Octree<T> {
         Octree {
@@ -39,6 +40,7 @@ impl<T> Octree<T> where T: Bounded + Viewable + Copy {
 
         // case: add
         for mut tree in self.trees.iter_mut() {
+
             if tree.overlaps(t.bounds()) {
                 tree.insert(t);
             }
@@ -91,7 +93,7 @@ impl<T> Octree<T> where T: Bounded + Viewable + Copy {
     }
 }
 
-impl<T> FromIterator<T> for Octree<T> where T: Bounded + Viewable + Copy {
+impl<T> FromIterator<T> for Octree<T> where T: Bounded + Viewable + Copy + Debug {
     fn from_iter<I>(iter: I) -> Self  where I: IntoIterator<Item=T> {
         let items: Vec<T> = iter.into_iter().collect();
         let bounds = items.iter().fold(Bounds::zero(), |sum, t| sum + t.bounds());
